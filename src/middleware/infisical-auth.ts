@@ -6,7 +6,7 @@ export const infisicalAuth = (webhookSecret: string) => {
     const signature = `${await c.req.header('x-infisical-signature')}`.split(';').pop()
     const hash = crypto
       .createHmac('sha256', webhookSecret)
-      .update(await c.req.raw.text())
+      .update(await c.req.raw.clone().text())
       .digest('hex')
 
     if (hash !== signature)
