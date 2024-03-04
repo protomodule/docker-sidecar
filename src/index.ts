@@ -15,9 +15,9 @@ if (config.INFISICAL_WEBHOOK_SECRET) {
       const webhook = await c.req.json()
       const system = `${webhook?.project?.secretPath ?? ""}`.replace(/^\/+|\/+$/g, '').toLowerCase()
       const environment = `${webhook?.project?.environment ?? ""}`.toLowerCase()
+      const docker = new Docker()
 
       console.log(`      🔎   Finding containers for ${system} in ${environment} environment...`)
-      const docker = new Docker()
       const filters = {'label': [
         `${config.DOCKER_LABEL_PREFIX}.system=${system}`,
         `${config.DOCKER_LABEL_PREFIX}.environment=${environment}`,
@@ -31,6 +31,29 @@ if (config.INFISICAL_WEBHOOK_SECRET) {
       })
       console.log(`      🏁   Done`)
 
+      try {
+        console.log(`      🔎   Finding services for ${system} in ${environment} environment...`)
+        const filters = {'label': [
+          `${config.DOCKER_LABEL_PREFIX}.system=${system}`,
+          `${config.DOCKER_LABEL_PREFIX}.environment=${environment}`,
+          `${config.DOCKER_LABEL_PREFIX}.restartOnWebhook=true`
+        ]}
+        const services = await docker.listServices({ filters })
+        await services.forEach(async service => {
+          const name = service?.Spec?.Name
+          console.log(`      🐳   Restarting service ${name} [${service.ID}]`)
+
+          const svc = await docker.getService(service.ID)
+          const inspected = await svc.inspect()
+          inspected.Spec.TaskTemplate.ForceUpdate = inspected.Spec.TaskTemplate.ForceUpdate + 1
+          await svc.update({...inspected.Spec, version: inspected.Version.Index});
+        })
+        console.log(`      🏁   Done`)
+      }
+      catch(e) {
+        console.log(`      ⏭️   Node is not running in swarm mode, skipping service restarts.`)
+      }
+
       return c.json({ message: 'ok' })
     } catch (e) { 
       console.log(e)
@@ -43,3 +66,4 @@ serve({
   fetch: app.fetch,
   port: config.PORT,
 })
+
