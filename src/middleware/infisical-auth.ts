@@ -10,6 +10,17 @@ export const infisicalAuth = (webhookSecret: string) => {
       .digest('hex')
 
     if (hash !== signature)
+      console.log(`      ❌   Invalid signature detected, aborting.`)
+
+      try {
+        const body = await c.req.raw.clone().json()
+        console.log(`           Event: ${body?.event ?? "- unknown -"}`)
+        console.log(`           Workspace ID: ${body?.project?.workspaceId ?? "- unknown -"}`)
+        console.log(`           Environment: ${body?.project?.environment ?? "- unknown -"}`)
+        console.log(`           Secret Path: ${body?.project?.secretPath ?? "- unknown -"}`)
+      }
+      catch(e) { /** Noop - can't read body as JSON */}
+
       return c.json({ error: 'Invalid signature' }, 403)
 
     await next()
