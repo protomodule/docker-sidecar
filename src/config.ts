@@ -5,5 +5,6 @@ export const config = fromEnv({
   NODE_ENV: str({ default: "development" }),
   LOG_LEVEL: str({ default: "debug" }),
   INFISICAL_WEBHOOK_SECRET: str({ default: undefined }),
-  DOCKER_LABEL_PREFIX: str({ default: "io.protomodule.container" })
+  DOCKER_CONTAINER_LABEL_PREFIX: str({ default: "io.protomodule.container" }),
+  DOCKER_SERVICE_LABEL_PREFIX: str({ default: "io.protomodule.service" })
 })
