@@ -1,10 +1,10 @@
+import Docker from 'dockerode'
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { serve } from '@hono/node-server'
 import { infisicalAuth } from './middleware/infisical-auth.js'
 import { config } from './config.js'
-import Docker from 'dockerode'
-import monitor from 'node-docker-monitor'
+import { startMonitoring } from './services/monitor.js'
 
 const app = new Hono()
 app.use('*', logger())
@@ -69,26 +69,4 @@ serve({
   port: config.PORT,
 })
 
-
-const delay = <T>(ms: number, result?: T) => new Promise(resolve => setTimeout(() => resolve(result), ms))
-
-var enabled = false
-monitor({
-  onMonitorStarted: async (monitor, docker) => {
-    console.log(`🚀  Monitoring starting ...`)
-    await delay(parseInt(process.env.WARUMUP) || 1000)
-    console.log(`🚦  Reporting now enabled`)
-    enabled = true
-  },
-  onMonitorStopped: (monitor?, docker?) => { 
-    console.log(`🛑  Monitoring stopped`)
-  },
-  onContainerUp: (info, docker) => {
-    const shouldNotify = (info?.Labels ?? {})[`${config.DOCKER_CONTAINER_LABEL_PREFIX}.notifyOnLifecycleEvent`] === "true";
-    (enabled && shouldNotify) && console.log(`⏯️  Up ${info.Name} ${info.Image}`)
-  },
-  onContainerDown: (info, docker) => {
-    const shouldNotify = (info?.Labels ?? {})[`${config.DOCKER_CONTAINER_LABEL_PREFIX}.notifyOnLifecycleEvent`] === "true";
-    (enabled && shouldNotify) && console.log(`⏹️  Stopped ${info.Name} ${info.Image} ${info.Status}`)
-  },
-})
+startMonitoring(config)
