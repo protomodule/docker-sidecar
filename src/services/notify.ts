@@ -14,9 +14,10 @@ export const setupNotifications = (config: Config) => async (body: string, type:
     return
   }
   try {
+    const appriseTags = [...config.APPRISE_PUSH_TAGS.split(',').map(tag => tag.trim()).filter(Boolean), ...(tags.length ? tags : ["debug"])]
     return await ky.post(config.APPRISE_PUSH_URL, {
       headers: (config.APPRISE_PUSH_USER && config.APPRISE_PUSH_PASSWORD) ? { Authorization: `Basic ${btoa(config.APPRISE_PUSH_USER + ':' + config.APPRISE_PUSH_PASSWORD)}` } : {},
-      json: { title, body, type, tags: tags.length ? tags : ["debug"] }
+      json: { title, body, type, tags: appriseTags }
     })
   }
   catch(e) {

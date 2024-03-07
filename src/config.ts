@@ -9,6 +9,7 @@ export const config = fromEnv({
   APPRISE_PUSH_URL: str({ default: undefined }),
   APPRISE_PUSH_USER: str({ default: undefined }),
   APPRISE_PUSH_PASSWORD: str({ default: undefined }),
+  APPRISE_PUSH_TAGS: str({ default: "" }),
   DOCKER_CONTAINER_LABEL_PREFIX: str({ default: "io.protomodule.container" }),
   DOCKER_SERVICE_LABEL_PREFIX: str({ default: "io.protomodule.service" }),
 })
